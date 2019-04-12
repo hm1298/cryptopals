@@ -1,21 +1,54 @@
 import math
 
-def decrypt(a):
+def decrypt():
     """
     Returns
     """
+    f = open('4.txt', 'r')
+    arr = f.read().split('\n')
+    base = listify(expected_frequency)
+    f.close()
+    num_line, smallest_val = 0, 999
+    for j in range(len(arr)):
+        line = arr[j]
+        d, length = {}, 0
+        for i in range(0, len(line), 2):
+            c = line[i: i + 2]
+            if c not in d:
+                d[c] = 0
+            d[c] += 1
+            length += 1
+        freqs = list(map(lambda x: x / length, listify(d)))
+        val = abs_diff_arrs(freqs, base)
+        if val < smallest_val:
+            smallest_val = val
+            num_line = j
+    a = arr[num_line]
     for i in range(256):
         s = int(bytify(i) * (len(a) // 2), 2) ^ int(a, 16)
         attempt = s.to_bytes((s.bit_length() + 7) // 8, 'big').decode('utf-8', 'ignore')
         if len(attempt) != 0:
             val = check(attempt)
             if(check(attempt) < 4):
-                print("#" + str(i) + ": " + attempt)
+                print("Line #" + str(num_line) + " xor'ed with " + str(i) + " : " + attempt.strip())
 
 def bytify(num):
     bd = bin(num)[2:]
     bd = "0" * (8 - len(bd)) + bd
     return bd
+
+def listify(d):
+    arr = []
+    for key in d:
+        arr.append(d[key])
+    arr.sort(reverse=True)
+    return arr
+
+def abs_diff_arrs(a1, a2):
+    total = 0
+    for i in range(min(len(a1), len(a2))):
+        total += math.sqrt(abs(a1[i] - a2[i]))
+    return total
 
 expected_frequency = {'a': 0.08167, 'b': 0.01492, 'c': 0.02782, \
 'd': 0.04253, 'e': 0.12702, 'f': 0.02228, 'g': 0.02015, 'h': 0.06094, \
@@ -88,4 +121,4 @@ def check(s):
     normalize_frequencies(d)
     return abs_diff(d, expected_frequency)
 
-decrypt("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
+decrypt()
