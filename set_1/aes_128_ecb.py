@@ -29,13 +29,20 @@ def SubBytes(state):
 	"""
 	assert(type(state) == list and type(state[0]) == list)
 	assert(type(state[0][0]) == str and len(state[0][0]) == 8)
-	for line in state:
-		for b in line:
+	for i in range(len(state)):
+		for j in range(len(state[i])):
+			b = field_inverse(state[i][j])
+			assert(len(b) == 8)
 			b2 = ""
 			c = "01100011"
-			for i in range(8):
-				s = [b[i], b[(i + 4) % 8], b[(i + 5) % 8], b[(i + 6) % 8], b[(i + 7) % 8], c[i]]
-				b2 += str(len(list(filter(lambda x: x == "1", s))) % 2)
+			for k in range(8):
+				if (b[k]=="1") ^ (b[(k-4)%8]=="1") ^ (b[(k-5)%8]=="1") ^ \
+					(b[(k-6)%8]=="1") ^ (b[(k-7)%8]=="1") ^ (c[k]=="1"):
+					b2 += "1"
+				else:
+					b2 += "0"
+			state[i][j] = b2
+	return state
 
 def field_inverse(b):
 	"""
@@ -112,3 +119,4 @@ assert(mult_for_f256(bitify(int("57", 16)), bitify(int("13", 16))) == bitify(int
 assert(divmod_for_f2_polys("100011011", "00001101") == ("00111000", "00000011"))
 assert(field_inverse("11100001") == "00001101")
 assert(field_inverse("00000001") == "00000001")
+assert(SubBytes([["00010111", "01100111", "11000010", "11010010"]]) == [["11110000", "10000101", "00100101", "10110101"]])

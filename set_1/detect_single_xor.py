@@ -1,8 +1,18 @@
+"""
+Same note as in single_byte_xor.py. Should be noted that, technically, this
+challenge did not require us to decrypt the ciphertext after finding it, so
+we should update single_byte_xor.py first.
+"""
+
 import math
 
 def decrypt():
     """
-    Returns
+    Searches through a file of possible ciphertext to find which line has
+    been encrypted using single-byte XOR. Then breaks that encryption and
+    prints the plaintext.
+    Employs a terribly naive approach that should surely be revisited and
+    updated in the future.
     """
     f = open('4.txt', 'r')
     arr = f.read().split('\n')
@@ -33,11 +43,19 @@ def decrypt():
                 print("Line #" + str(num_line) + " xor'ed with " + str(i) + " : " + attempt.strip())
 
 def bytify(num):
+    """
+    Takes as input an integer num, 0 <= num < 256. Returns a string of 8
+    characters, 0 or 1, the binary representation of num.
+    """
     bd = bin(num)[2:]
     bd = "0" * (8 - len(bd)) + bd
     return bd
 
 def listify(d):
+    """
+    Takes as input a dictionary d and returns a list containing the values
+    of d, sorted in decreasing order.
+    """
     arr = []
     for key in d:
         arr.append(d[key])
@@ -45,6 +63,11 @@ def listify(d):
     return arr
 
 def abs_diff_arrs(a1, a2):
+    """
+    Takes as input two lists and returns an integer, the cumulative
+    displacement between their entries.
+    We should probably change this to evalute through max(len(a1), len(a2)).
+    """
     total = 0
     for i in range(min(len(a1), len(a2))):
         total += math.sqrt(abs(a1[i] - a2[i]))
@@ -56,14 +79,12 @@ expected_frequency = {'a': 0.08167, 'b': 0.01492, 'c': 0.02782, \
 'n': 0.06749, 'o': 0.07507, 'p': 0.01929, 'q': 0.00095, 'r': 0.05987, \
 's': 0.06327, 't': 0.09056, 'u': 0.02758, 'v': 0.00978, 'w': 0.0236, \
 'x': 0.0015, 'y': 0.01974, 'z': 0.00074}
-random_frequency = {}
-for c in 'abcdefghijklmnopqrstuvwxyz':
-    random_frequency[c] = 1 / 26
 
 def letter_frequencies(s):
     """
-    Returns a dictionary keyed a-z with values the percent
-    of keyed character (upper or lower) in s.
+    Takes as input a string s. Returns a dictionary keyed a-z, the values of
+    which are the percent of characters in s equal to the keyed letter or its
+    uppercase version.
     """
     counts = {}
     l = len(s)
@@ -82,7 +103,7 @@ def letter_frequencies(s):
 
 def normalize_frequencies(d):
     """
-    Returns nothing. Scales the values of d to sum to 1.
+    Takes as input a dictionary d. Scales the values of d to sum to 1.
     """
     total = sum_dict(d)
     if total != 0:
@@ -92,7 +113,7 @@ def normalize_frequencies(d):
 
 def sum_dict(d):
     """
-    Returns the sum of the values in dictionary d.
+    Takes as input a dictionary d. Returns the sum of the values in d.
     """
     total = 0
     for k in d:
@@ -101,8 +122,8 @@ def sum_dict(d):
 
 def abs_diff(d1, d2):
     """
-    Returns the sum of displacements between two probability
-    dictionaries.
+    Takes as input two dictionaries d1 and d2. Returns the sum of
+    displacements between two probability dictionaries.
     """
     total = 0
     try:
@@ -116,6 +137,10 @@ def check(s):
     """
     Returns the absolute difference between the string s and
     its expected letter frequencies.
+
+    This is my first attempt at applying cryptanalysis to ciphertext with
+    unknown key. As such, it is rather naive and ineffective, although it
+    proved sufficient for this challenge.
     """
     d = letter_frequencies(s)
     normalize_frequencies(d)

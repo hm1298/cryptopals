@@ -1,16 +1,17 @@
 def hex_to_base64(a):
 	"""
+	Takes as input string a containing alphanumeric characters 0-9, a-f only.
 	Returns the base-64 representation of hexadecimal a.
 	"""
 	s = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 	bitstring = bin(int(a, 16))[2:].zfill(len(a) * 4)
 	answer = ""
 	while bitstring != "":
-		if len(bitstring) < 6:
-			bitstring = bitstring + "0" * (6 - len(bitstring))
 		val = bitstring[:6]
-		bitstring = bitstring[6:]
 		answer += s[int(val, 2)]
+		if len(bitstring) < 6:
+			break
+		bitstring = bitstring[6:]
 	while len(answer) % 4 != 0:
 		answer += "="
 	return answer

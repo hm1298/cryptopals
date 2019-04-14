@@ -1,15 +1,25 @@
 def xor(s1, s2):
 	"""
-	Returns the hexadecimal output of s1 xor s2.
+	Takes as input two strings of ASCII characters. Returns the hexadecimal
+	output of the bytecode of s1 xor the bytecode of s2.
 	"""
 	return hex(int(text_to_bits(s1), 2) ^ int(text_to_bits(s2), 2))[2:].zfill(2 * len(s1))
 
-def text_to_bits(s):
-	return bin(int.from_bytes(s.encode(), 'big'))[2:]
+def text_to_bits(text):
+	"""
+	Takes as input a string of ASCII characters. Returns a string of bits
+	representing their bytecode.
+	"""
+	return bin(int.from_bytes(text.encode(), 'big'))[2:]
 
 def xor_encrypt(s, key):
 	"""
+	Takes as input two strings. Returns a string of alphanumeric characters
+	0-9, a-f only representing the hexadecimal output of xor encrypting s
+	with repeating key key.
 	"""
+	if len(s) < len(key):
+		key = key[:len(s)]
 	s2 = key * (len(s) // len(key)) + key[:(len(s) % len(key))]
 	assert(len(s) == len(s2))
 	return xor(s, s2)
