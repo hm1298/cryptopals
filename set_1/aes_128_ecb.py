@@ -44,6 +44,40 @@ def SubBytes(state):
 			state[i][j] = b2
 	return state
 
+def ShiftRows(state):
+	"""
+	Takes as input a double array of strings of bits. Returns a double array
+	of strings of bits with each row shifted by a constant amount.
+	"""
+	for i in range(len(state)): #len(state) should be 4
+		Nb = len(state[i])
+		state[i] = [state[i][(j + i) % Nb] for j in range(Nb)]
+	return state
+
+def MixColumns(state):
+	"""
+	Takes as input a double array of strings of bits. Returns a double array
+	of strings of bits with a transformation applied to each column, taken
+	as one long bitstring.
+	"""
+	b1, b2 = "00000010", "00000011"
+	for j in range(len(state[0])):
+		s0, s1, s2, s3 = state[0][j], state[1][j], state[2][j], state[3][j]
+		state[0][j] = bitify(int(mult_for_f256(b1, s0), 2) ^ int( \
+			mult_for_f256(b2, s1), 2) ^ int(s2, 2) ^ int(s3, 2))
+		state[1][j] = bitify(int(s0, 2) ^ int(mult_for_f256(b1, s1), 2) ^ \
+			int(mult_for_f256(b2, s2), 2) ^ int(s3, 2))
+		state[2][j] = bitify(int(s0, 2) ^ int(s1, 2) ^ int(mult_for_f256( \
+			b1, s2), 2) ^ int(mult_for_f256(b2, s3), 2))
+		state[3][j] = bitify(int(mult_for_f256(b2, s0), 2) ^ int(s1, 2) ^ \
+			int(s2, 2) ^ int(mult_for_f256(b1, s3), 2))
+
+def AddRoundKey(state, key):
+	"""
+	Takes as input a double array of strings of bits (state) and a string
+	key.
+	"""
+
 def field_inverse(b):
 	"""
 	Takes as input a string of bits of length 8. Returns a string of bits
@@ -120,3 +154,5 @@ assert(divmod_for_f2_polys("100011011", "00001101") == ("00111000", "00000011"))
 assert(field_inverse("11100001") == "00001101")
 assert(field_inverse("00000001") == "00000001")
 assert(SubBytes([["00010111", "01100111", "11000010", "11010010"]]) == [["11110000", "10000101", "00100101", "10110101"]])
+assert(ShiftRows([[(0, 0), (0, 1), (0, 2), (0, 3)], [(1, 0), (1, 1), (1, 2), (1, 3)], [(2, 0), (2, 1), (2, 2), (2, 3)], [(3, 0), (3, 1), (3, 2), (3, 3)]]) == [[(0, 0), (0, 1), (0, 2), (0, 3)], [(1, 1), (1, 2), (1, 3), (1, 0)], [(2, 2), (2, 3), (2, 0), (2, 1)], [(3, 3), (3, 0), (3, 1), (3, 2)]])
+#assert MixColumns
