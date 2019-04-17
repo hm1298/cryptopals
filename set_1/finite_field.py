@@ -1,3 +1,7 @@
+#TO DO:
+#(1) Add __r<oper>__ methods to each class to allow for coercing ints
+#(2) Make F256 a subclass of F2Poly?
+
 class F2Poly:
     def __init__(self, arr):
         self.coeffs = [arr[i] % 2 for i in range(len(arr))]
@@ -153,8 +157,8 @@ def extended_euclidean(a, b):
     return x2, y2, a
 
 
-a, b, c = F256(int("57", 16)), F256(int("13", 16)), F256(int("fe", 16))
-X, Y, Z = F2Poly([1, 0, 1, 1]), F2Poly([1, 1, 0, 1, 1, 0, 0, 0, 1]), F2Poly([1, 0, 0, 0, 0, 1, 1, 1])
-assert(divmod(X * Z, Y)[1] == F2Poly([1]))
-assert(F256(Z.eval_at(2)).inverse() == F256(X.eval_at(2)))
-assert(a * b == c)
+#a, b, c = F256(int("57", 16)), F256(int("13", 16)), F256(int("fe", 16))
+#X, Y, Z = F2Poly([1, 0, 1, 1]), F2Poly([1, 1, 0, 1, 1, 0, 0, 0, 1]), F2Poly([1, 0, 0, 0, 0, 1, 1, 1])
+#assert(divmod(X * Z, Y)[1] == F2Poly([1]))
+#assert(F256(Z.eval_at(2)).inverse() == F256(X.eval_at(2)))
+#assert(a * b == c)
