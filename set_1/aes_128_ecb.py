@@ -3,6 +3,27 @@ In all of the following methods, we take the finite field of order 256 to be
 identified with the quotient ring F_2[x] / (x^8 + x^4 + x^3 + x + 1).
 """
 from finite_field import *
+from base64 import b64decode
+
+def solve():
+	key = b'YELLOW SUBMARINE'
+	file_in = open("7.txt", "r")
+	data_enc = "".join(file_in.read().split('\n'))
+	file_in.close()
+
+	ciphertext = b64decode(data_enc)
+	word = [[bitify(key[4*i+j]) for j in range(4)] for i in range(4)]
+	result, count = "", 0
+	q, r = divmod(len(ciphertext), 16)
+	while count <= q:
+		if count == q and r == 0:
+			break
+		state = [[bitify(ciphertext[16*count+4*j+i]) for j in range(4)] for i in range(4)]
+		state = aes_decrypt(state, word)
+		result += "".join(list(map(lambda x: chr(int(x, 2)), [state[i % 4][i // 4] for i in range(16)])))
+		count += 1
+
+	print(result)
 
 def hex_aes_enc(plaintext, word):
 	"""
@@ -29,17 +50,17 @@ def aes_encrypt(plaintext, word):
 	state = plaintext
 	key_schedule = KeyExpansion(word)
 
-	AddRoundKey(state, key_schedule)
+	AddRoundKey(state, next(key_schedule))
 
 	for i in range(1, 10):
 		SubBytes(state)
 		ShiftRows(state)
 		MixColumns(state)
-		AddRoundKey(state, key_schedule)
+		AddRoundKey(state, next(key_schedule))
 
 	SubBytes(state)
 	ShiftRows(state)
-	AddRoundKey(state, key_schedule)
+	AddRoundKey(state, next(key_schedule))
 
 	return state
 
@@ -48,6 +69,22 @@ def aes_decrypt(plaintext, word):
 	Input is assumed to be in double array binary string format.
 	"""
 	state = plaintext
+	key_schedule = KeyExpansion(word)
+	keys = [next(key_schedule) for i in range(11)]
+
+	AddRoundKey(state, keys[10])
+	InvShiftRows(state)
+	InvSubBytes(state)
+
+	for i in range(9, 0, -1):
+		AddRoundKey(state, keys[i])
+		InvMixColumns(state)
+		InvShiftRows(state)
+		InvSubBytes(state)
+
+	AddRoundKey(state, keys[0])
+
+	return state
 
 def SubBytes(state):
 	"""
@@ -129,12 +166,11 @@ def InvMixColumns(state):
 			mult_for_f256(b3, s1), 2) ^ int(mult_for_f256(b4, s2), 2) \
 			^ int(mult_for_f256(b1, s3), 2))
 
-def AddRoundKey(state, gen):
+def AddRoundKey(state, round_key):
 	"""
 	Takes as input a double array of strings of bits (state) and an iterable
 	gen that gives the next words in the key schedule.
 	"""
-	round_key = next(gen)
 	for i in range(len(state)):
 		for j in range(len(state[i])):
 			state[i][j] = bitify(int(state[i][j], 2) ^ int(round_key[i][j], 2))
@@ -282,7 +318,7 @@ def format_state(state):
 			output[i].append(format(elt))
 	return output
 
-
+"""
 assert(mult_for_f256(bitify(int("57", 16)), bitify(int("13", 16))) == bitify(int("fe", 16)))
 assert(divmod_for_f2_polys("100011011", "00001101") == ("00111000", "00000011"))
 assert(field_inverse("11100001") == "00001101")
@@ -312,12 +348,10 @@ key = [list(map(lambda x: bitify(int(x, 16)), line)) for line in raw_key]
 
 raw_state2, raw_key2 = [["00", "11", "22", "33"], ["44", "55", "66", "77"], ["88", "99", "aa", "bb"], ["cc", "dd", "ee", "ff"]], [["00", "01", "02", "03"], ["04", "05", "06", "07"], ["08", "09", "0a", "0b"], ["0c", "0d", "0e", "0f"]]
 state2, key2 = [[bitify(int(raw_state2[i][j], 16)) for i in range(4)] for j in range(4)], [list(map(lambda x: bitify(int(x, 16)), line)) for line in raw_key2]
+print(format_state(state2))
 aes_encrypt(state2, key2)
+aes_decrypt(state2, key2)
 print(format_state(state2))
-SubBytes(state2)
-InvSubBytes(state2)
-MixColumns(state2)
-InvMixColumns(state2)
-ShiftRows(state2)
-InvShiftRows(state2)
-print(format_state(state2))
+"""
+
+solve()
