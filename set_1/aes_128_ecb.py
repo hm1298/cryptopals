@@ -6,317 +6,317 @@ from finite_field import *
 from base64 import b64decode
 
 def solve():
-	key = b'YELLOW SUBMARINE'
-	file_in = open("7.txt", "r")
-	data_enc = "".join(file_in.read().split('\n'))
-	file_in.close()
+    key = b'YELLOW SUBMARINE'
+    file_in = open("7.txt", "r")
+    data_enc = "".join(file_in.read().split('\n'))
+    file_in.close()
 
-	ciphertext = b64decode(data_enc)
-	word = [[bitify(key[4*i+j]) for j in range(4)] for i in range(4)]
-	result, count = "", 0
-	q, r = divmod(len(ciphertext), 16)
-	while count <= q:
-		if count == q and r == 0:
-			break
-		state = [[bitify(ciphertext[16*count+4*j+i]) for j in range(4)] for i in range(4)]
-		state = aes_decrypt(state, word)
-		result += "".join(list(map(lambda x: chr(int(x, 2)), [state[i % 4][i // 4] for i in range(16)])))
-		count += 1
+    ciphertext = b64decode(data_enc)
+    word = [[bitify(key[4*i+j]) for j in range(4)] for i in range(4)]
+    result, count = "", 0
+    q, r = divmod(len(ciphertext), 16)
+    while count <= q:
+        if count == q and r == 0:
+            break
+        state = [[bitify(ciphertext[16*count+4*j+i]) for j in range(4)] for i in range(4)]
+        state = aes_decrypt(state, word)
+        result += "".join(list(map(lambda x: chr(int(x, 2)), [state[i % 4][i // 4] for i in range(16)])))
+        count += 1
 
-	print(result)
+    print(result)
 
 def hex_aes_enc(plaintext, word):
-	"""
-	Input is assumed to be in string hexadecimal format. Padding is added.
-	Key must be proper length.
-	"""
-	key = [[bitify(int(word[2*(4*i+j):2*(4*i+j+1)], 16)) for j in range(4)] for i in range(4)]
-	result = []
-	q, r = divmod(len(plaintext), 32)
-	plaintext += "f" * (32 - r)
-	count, result = 0, ""
-	while count <= q:
-		if count == q and r == 0:
-			break
-		state = aes_encrypt([[bitify(int(plaintext[32*count+2*(4*j+i):32*count+2*(4*j+i+1)], 16)) for j in range(4)] for i in range(4)], key)
-		result += "".join(list(map(lambda x: hex(int(x, 2))[2:].zfill(2), [state[i % 4][i // 4] for i in range(16)])))
-		count += 1
-	return result
+    """
+    Input is assumed to be in string hexadecimal format. Padding is added.
+    Key must be proper length.
+    """
+    key = [[bitify(int(word[2*(4*i+j):2*(4*i+j+1)], 16)) for j in range(4)] for i in range(4)]
+    result = []
+    q, r = divmod(len(plaintext), 32)
+    plaintext += "f" * (32 - r)
+    count, result = 0, ""
+    while count <= q:
+        if count == q and r == 0:
+            break
+        state = aes_encrypt([[bitify(int(plaintext[32*count+2*(4*j+i):32*count+2*(4*j+i+1)], 16)) for j in range(4)] for i in range(4)], key)
+        result += "".join(list(map(lambda x: hex(int(x, 2))[2:].zfill(2), [state[i % 4][i // 4] for i in range(16)])))
+        count += 1
+    return result
 
 def aes_encrypt(plaintext, word):
-	"""
-	Input is assumed to be in double array binary string format.
-	"""
-	state = plaintext
-	key_schedule = KeyExpansion(word)
+    """
+    Input is assumed to be in double array binary string format.
+    """
+    state = plaintext
+    key_schedule = KeyExpansion(word)
 
-	AddRoundKey(state, next(key_schedule))
+    AddRoundKey(state, next(key_schedule))
 
-	for i in range(1, 10):
-		SubBytes(state)
-		ShiftRows(state)
-		MixColumns(state)
-		AddRoundKey(state, next(key_schedule))
+    for i in range(1, 10):
+        SubBytes(state)
+        ShiftRows(state)
+        MixColumns(state)
+        AddRoundKey(state, next(key_schedule))
 
-	SubBytes(state)
-	ShiftRows(state)
-	AddRoundKey(state, next(key_schedule))
+    SubBytes(state)
+    ShiftRows(state)
+    AddRoundKey(state, next(key_schedule))
 
-	return state
+    return state
 
 def aes_decrypt(plaintext, word):
-	"""
-	Input is assumed to be in double array binary string format.
-	"""
-	state = plaintext
-	key_schedule = KeyExpansion(word)
-	keys = [next(key_schedule) for i in range(11)]
+    """
+    Input is assumed to be in double array binary string format.
+    """
+    state = plaintext
+    key_schedule = KeyExpansion(word)
+    keys = [next(key_schedule) for i in range(11)]
 
-	AddRoundKey(state, keys[10])
-	InvShiftRows(state)
-	InvSubBytes(state)
+    AddRoundKey(state, keys[10])
+    InvShiftRows(state)
+    InvSubBytes(state)
 
-	for i in range(9, 0, -1):
-		AddRoundKey(state, keys[i])
-		InvMixColumns(state)
-		InvShiftRows(state)
-		InvSubBytes(state)
+    for i in range(9, 0, -1):
+        AddRoundKey(state, keys[i])
+        InvMixColumns(state)
+        InvShiftRows(state)
+        InvSubBytes(state)
 
-	AddRoundKey(state, keys[0])
+    AddRoundKey(state, keys[0])
 
-	return state
+    return state
 
 def SubBytes(state):
-	"""
-	Takes as input a double array of strings of bits. Transforms input in place
-	with the appropriate nonlinear transformation applied to each string. Each
-	string has length 8.
-	"""
-	#assert(type(state) == list and type(state[0]) == list)
-	#assert(type(state[0][0]) == str and len(state[0][0]) == 8)
-	for i in range(len(state)):
-		state[i] = SubWord(state[i])
+    """
+    Takes as input a double array of strings of bits. Transforms input in place
+    with the appropriate nonlinear transformation applied to each string. Each
+    string has length 8.
+    """
+    #assert(type(state) == list and type(state[0]) == list)
+    #assert(type(state[0][0]) == str and len(state[0][0]) == 8)
+    for i in range(len(state)):
+        state[i] = SubWord(state[i])
 
 def InvSubBytes(state):
-	"""
-	"""
-	for i in range(len(state)):
-		for j in range(len(state[i])):
-				b = state[i][j]
-				b2 = ""
-				c = "00000101"
-				for k in range(8):
-					if (b[(k-2)%8]=="1") ^ (b[(k-5)%8]=="1") ^ \
-						(b[(k-7)%8]=="1") ^ (c[k]=="1"):
-						b2 += "1"
-					else:
-						b2 += "0"
-				state[i][j] = field_inverse(b2)
+    """
+    """
+    for i in range(len(state)):
+        for j in range(len(state[i])):
+                b = state[i][j]
+                b2 = ""
+                c = "00000101"
+                for k in range(8):
+                    if (b[(k-2)%8]=="1") ^ (b[(k-5)%8]=="1") ^ \
+                        (b[(k-7)%8]=="1") ^ (c[k]=="1"):
+                        b2 += "1"
+                    else:
+                        b2 += "0"
+                state[i][j] = field_inverse(b2)
 
 def ShiftRows(state):
-	"""
-	Takes as input a double array of strings of bits. Transforms input in place
-	with each row shifted by a constant amount.
-	"""
-	for i in range(len(state)): #len(state) should be 4
-		Nb = len(state[i])
-		state[i] = [state[i][(j + i) % Nb] for j in range(Nb)]
+    """
+    Takes as input a double array of strings of bits. Transforms input in place
+    with each row shifted by a constant amount.
+    """
+    for i in range(len(state)): #len(state) should be 4
+        Nb = len(state[i])
+        state[i] = [state[i][(j + i) % Nb] for j in range(Nb)]
 
 def InvShiftRows(state):
-	"""
-	"""
-	for i in range(len(state)):
-		Nb = len(state[i])
-		state[i] = [state[i][(j - i) % Nb] for j in range(Nb)]
+    """
+    """
+    for i in range(len(state)):
+        Nb = len(state[i])
+        state[i] = [state[i][(j - i) % Nb] for j in range(Nb)]
 
 def MixColumns(state):
-	"""
-	Takes as input a double array of strings of bits. Transforms input in place
-	with a transformation applied to each column, taken as one long bitstring.
-	"""
-	b1, b2 = "00000010", "00000011"
-	for j in range(len(state[0])):
-		s0, s1, s2, s3 = state[0][j], state[1][j], state[2][j], state[3][j]
-		state[0][j] = bitify(int(mult_for_f256(b1, s0), 2) ^ int( \
-			mult_for_f256(b2, s1), 2) ^ int(s2, 2) ^ int(s3, 2))
-		state[1][j] = bitify(int(s0, 2) ^ int(mult_for_f256(b1, s1), 2) ^ \
-			int(mult_for_f256(b2, s2), 2) ^ int(s3, 2))
-		state[2][j] = bitify(int(s0, 2) ^ int(s1, 2) ^ int(mult_for_f256( \
-			b1, s2), 2) ^ int(mult_for_f256(b2, s3), 2))
-		state[3][j] = bitify(int(mult_for_f256(b2, s0), 2) ^ int(s1, 2) ^ \
-			int(s2, 2) ^ int(mult_for_f256(b1, s3), 2))
+    """
+    Takes as input a double array of strings of bits. Transforms input in place
+    with a transformation applied to each column, taken as one long bitstring.
+    """
+    b1, b2 = "00000010", "00000011"
+    for j in range(len(state[0])):
+        s0, s1, s2, s3 = state[0][j], state[1][j], state[2][j], state[3][j]
+        state[0][j] = bitify(int(mult_for_f256(b1, s0), 2) ^ int( \
+            mult_for_f256(b2, s1), 2) ^ int(s2, 2) ^ int(s3, 2))
+        state[1][j] = bitify(int(s0, 2) ^ int(mult_for_f256(b1, s1), 2) ^ \
+            int(mult_for_f256(b2, s2), 2) ^ int(s3, 2))
+        state[2][j] = bitify(int(s0, 2) ^ int(s1, 2) ^ int(mult_for_f256( \
+            b1, s2), 2) ^ int(mult_for_f256(b2, s3), 2))
+        state[3][j] = bitify(int(mult_for_f256(b2, s0), 2) ^ int(s1, 2) ^ \
+            int(s2, 2) ^ int(mult_for_f256(b1, s3), 2))
 
 def InvMixColumns(state):
-	"""
-	terrible look at that faux-indexing on variable names eugh
-	"""
-	b1, b2, b3, b4 = "00001110", "00001011", "00001101", "00001001"
-	for j in range(len(state[0])):
-		s0, s1, s2, s3 = state[0][j], state[1][j], state[2][j], state[3][j]
-		state[0][j] = bitify(int(mult_for_f256(b1, s0), 2) ^ int( \
-			mult_for_f256(b2, s1), 2) ^ int(mult_for_f256(b3, s2), 2) \
-			^ int(mult_for_f256(b4, s3), 2))
-		state[1][j] = bitify(int(mult_for_f256(b4, s0), 2) ^ int( \
-			mult_for_f256(b1, s1), 2) ^ int(mult_for_f256(b2, s2), 2) \
-			^ int(mult_for_f256(b3, s3), 2))
-		state[2][j] = bitify(int(mult_for_f256(b3, s0), 2) ^ int( \
-			mult_for_f256(b4, s1), 2) ^ int(mult_for_f256(b1, s2), 2) \
-			^ int(mult_for_f256(b2, s3), 2))
-		state[3][j] = bitify(int(mult_for_f256(b2, s0), 2) ^ int( \
-			mult_for_f256(b3, s1), 2) ^ int(mult_for_f256(b4, s2), 2) \
-			^ int(mult_for_f256(b1, s3), 2))
+    """
+    terrible look at that faux-indexing on variable names eugh
+    """
+    b1, b2, b3, b4 = "00001110", "00001011", "00001101", "00001001"
+    for j in range(len(state[0])):
+        s0, s1, s2, s3 = state[0][j], state[1][j], state[2][j], state[3][j]
+        state[0][j] = bitify(int(mult_for_f256(b1, s0), 2) ^ int( \
+            mult_for_f256(b2, s1), 2) ^ int(mult_for_f256(b3, s2), 2) \
+            ^ int(mult_for_f256(b4, s3), 2))
+        state[1][j] = bitify(int(mult_for_f256(b4, s0), 2) ^ int( \
+            mult_for_f256(b1, s1), 2) ^ int(mult_for_f256(b2, s2), 2) \
+            ^ int(mult_for_f256(b3, s3), 2))
+        state[2][j] = bitify(int(mult_for_f256(b3, s0), 2) ^ int( \
+            mult_for_f256(b4, s1), 2) ^ int(mult_for_f256(b1, s2), 2) \
+            ^ int(mult_for_f256(b2, s3), 2))
+        state[3][j] = bitify(int(mult_for_f256(b2, s0), 2) ^ int( \
+            mult_for_f256(b3, s1), 2) ^ int(mult_for_f256(b4, s2), 2) \
+            ^ int(mult_for_f256(b1, s3), 2))
 
 def AddRoundKey(state, round_key):
-	"""
-	Takes as input a double array of strings of bits (state) and an iterable
-	gen that gives the next words in the key schedule.
-	"""
-	for i in range(len(state)):
-		for j in range(len(state[i])):
-			state[i][j] = bitify(int(state[i][j], 2) ^ int(round_key[i][j], 2))
+    """
+    Takes as input a double array of strings of bits (state) and an iterable
+    gen that gives the next words in the key schedule.
+    """
+    for i in range(len(state)):
+        for j in range(len(state[i])):
+            state[i][j] = bitify(int(state[i][j], 2) ^ int(round_key[i][j], 2))
 
 def KeyExpansion(key):
-	"""
-	Takes as input a key. Returns a generator for the key schedule.
-	"""
-	def key_schedule():
-		state = [line[:] for line in key]
-		Rcon = ["00000001", "00000000", "00000000","00000000"]
-		while True:
-			yield [[state[i][j] for i in range(4)] for j in range(4)]
-			rot = RotWord(state[3])
-			sub = SubWord(rot)
-			state[0] = XorWord(XorWord(Rcon, sub), state[0])
-			for i in range(1, 4):
-				state[i] = XorWord(state[i-1], state[i])
-			Rcon[0] = mult_for_f256(Rcon[0], "00000010")
-	return key_schedule()
+    """
+    Takes as input a key. Returns a generator for the key schedule.
+    """
+    def key_schedule():
+        state = [line[:] for line in key]
+        Rcon = ["00000001", "00000000", "00000000","00000000"]
+        while True:
+            yield [[state[i][j] for i in range(4)] for j in range(4)]
+            rot = RotWord(state[3])
+            sub = SubWord(rot)
+            state[0] = XorWord(XorWord(Rcon, sub), state[0])
+            for i in range(1, 4):
+                state[i] = XorWord(state[i-1], state[i])
+            Rcon[0] = mult_for_f256(Rcon[0], "00000010")
+    return key_schedule()
 
 def SubWord(word):
-	"""
-	Takes as input an array of strings of bits.
-	"""
-	result = []
-	for i in range(len(word)): #len(word) should be 4
-		b = field_inverse(word[i])
-		assert(len(b) == 8)
-		b2 = ""
-		c = "01100011"
-		for k in range(8):
-			if (b[k]=="1") ^ (b[(k-4)%8]=="1") ^ (b[(k-5)%8]=="1") ^ \
-				(b[(k-6)%8]=="1") ^ (b[(k-7)%8]=="1") ^ (c[k]=="1"):
-				b2 += "1"
-			else:
-				b2 += "0"
-		result.append(b2)
-	return result
+    """
+    Takes as input an array of strings of bits.
+    """
+    result = []
+    for i in range(len(word)): #len(word) should be 4
+        b = field_inverse(word[i])
+        assert(len(b) == 8)
+        b2 = ""
+        c = "01100011"
+        for k in range(8):
+            if (b[k]=="1") ^ (b[(k-4)%8]=="1") ^ (b[(k-5)%8]=="1") ^ \
+                (b[(k-6)%8]=="1") ^ (b[(k-7)%8]=="1") ^ (c[k]=="1"):
+                b2 += "1"
+            else:
+                b2 += "0"
+        result.append(b2)
+    return result
 
 def RotWord(word):
-	"""
-	Takes as input an array of strings of bits.
-	"""
-	result = []
-	for i in range(len(word)): #len(word) should be 4
-		result.append(word[(i + 1) % len(word)])
-	return result
+    """
+    Takes as input an array of strings of bits.
+    """
+    result = []
+    for i in range(len(word)): #len(word) should be 4
+        result.append(word[(i + 1) % len(word)])
+    return result
 
 def XorWord(word1, word2):
-	"""
-	Takes as input two arrays of strings of bits.
-	"""
-	result = []
-	for i in range(len(word1)): #assumes word1 and word2 have same length
-		result.append(bitify(int(word1[i], 2) ^ int(word2[i], 2)))
-	return result
+    """
+    Takes as input two arrays of strings of bits.
+    """
+    result = []
+    for i in range(len(word1)): #assumes word1 and word2 have same length
+        result.append(bitify(int(word1[i], 2) ^ int(word2[i], 2)))
+    return result
 
 def field_inverse(b):
-	"""
-	Takes as input a string of bits of length 8. Returns a string of bits
-	of length 8.
-	"""
-	if b == "00000000":
-		return b
-	tup = eea_for_f256("100011011", b)
-	assert(tup[2] == "00000001")
-	return tup[1]
+    """
+    Takes as input a string of bits of length 8. Returns a string of bits
+    of length 8.
+    """
+    if b == "00000000":
+        return b
+    tup = eea_for_f256("100011011", b)
+    assert(tup[2] == "00000001")
+    return tup[1]
 
 def eea_for_f256(a, b):
-	"""
-	Takes as input two strings of bits of length ?. Returns a tuple of
-	three strings of bits of length 8.
-	"""
-	if int(b, 2) > int(a, 2):
-		(x, y, d) = eea_for_f256(b, a)
-		return (y, x, d)
+    """
+    Takes as input two strings of bits of length ?. Returns a tuple of
+    three strings of bits of length 8.
+    """
+    if int(b, 2) > int(a, 2):
+        (x, y, d) = eea_for_f256(b, a)
+        return (y, x, d)
 
-	if int(b, 2) == 0:
-		return ("00000001", "00000000", a)
+    if int(b, 2) == 0:
+        return ("00000001", "00000000", a)
 
-	x1, x2, y1, y2 = 0, 1, 1, 0
-	while int(b, 2) > 0:
-		q, r = divmod_for_f2_polys(a, b)
-		x = x2 ^ int(mult_for_f256(q, bitify(x1)), 2)
-		y = y2 ^ int(mult_for_f256(q, bitify(y1)), 2)
-		a, b, x2, x1, y2, y1 = b, r, x1, x, y1, y
+    x1, x2, y1, y2 = 0, 1, 1, 0
+    while int(b, 2) > 0:
+        q, r = divmod_for_f2_polys(a, b)
+        x = x2 ^ int(mult_for_f256(q, bitify(x1)), 2)
+        y = y2 ^ int(mult_for_f256(q, bitify(y1)), 2)
+        a, b, x2, x1, y2, y1 = b, r, x1, x, y1, y
 
-	return (bitify(x2), bitify(y2), a)
+    return (bitify(x2), bitify(y2), a)
 
 def divmod_for_f2_polys(a, b):
-	"""
-	Takes as input two strings of bits. Returns a tuple of two strings of
-	bits.
-	"""
-	x, y, q = int(a, 2), int(b, 2), 0
-	while x >= y:
-		k = len(bin(x)) - len(bin(y))
-		q += 2 ** k
-		x = x ^ (y * (2 ** k))
-	return bitify(q), bitify(x)
+    """
+    Takes as input two strings of bits. Returns a tuple of two strings of
+    bits.
+    """
+    x, y, q = int(a, 2), int(b, 2), 0
+    while x >= y:
+        k = len(bin(x)) - len(bin(y))
+        q += 2 ** k
+        x = x ^ (y * (2 ** k))
+    return bitify(q), bitify(x)
 
 
 def mult_for_f256(a, b):
-	"""
-	Takes as input two strings of bits of length 8. Returns a tuple of
-	three strings of bits of length 8, corresponding to the product of
-	a and b in the finite field of order 256.
-	"""
-	if int(b, 2) > int(a, 2):
-		return mult_for_f256(b, a)
-	ans = 0
-	for i in range(8):
-		if a[7 - i] == "1":
-			ans = ans ^ int(b, 2)
-		c = b[0]
-		b = b[1:] + "0"
-		if c == "1":
-			b = bitify(int(b, 2) ^ 27)
-	return bitify(ans)
+    """
+    Takes as input two strings of bits of length 8. Returns a tuple of
+    three strings of bits of length 8, corresponding to the product of
+    a and b in the finite field of order 256.
+    """
+    if int(b, 2) > int(a, 2):
+        return mult_for_f256(b, a)
+    ans = 0
+    for i in range(8):
+        if a[7 - i] == "1":
+            ans = ans ^ int(b, 2)
+        c = b[0]
+        b = b[1:] + "0"
+        if c == "1":
+            b = bitify(int(b, 2) ^ 27)
+    return bitify(ans)
 
 def bitify(n):
-	"""
-	Takes as input an integer n, 0 <= n < 512. Returns a string of bits of
-	length 8, corresponding to the binary representation of n.
-	"""
-	assert(n >= 0 and n < 512)
-	return bin(n)[2:].zfill(8)
+    """
+    Takes as input an integer n, 0 <= n < 512. Returns a string of bits of
+    length 8, corresponding to the binary representation of n.
+    """
+    assert(n >= 0 and n < 512)
+    return bin(n)[2:].zfill(8)
 
 def format(b):
-	"""
-	Takes as input a string of bits. Returns string of input as hexadecimal.
-	"""
-	return hex(int(b, 2))[2:].zfill(2)
+    """
+    Takes as input a string of bits. Returns string of input as hexadecimal.
+    """
+    return hex(int(b, 2))[2:].zfill(2)
 
 def format_state(state):
-	"""
-	Takes as input a double array of strings of bits. Returns output of the
-	same type with format() applied to each element of the double array.
-	"""
-	output = []
-	for i in range(len(state)):
-		output.append([])
-		for elt in state[i]:
-			output[i].append(format(elt))
-	return output
+    """
+    Takes as input a double array of strings of bits. Returns output of the
+    same type with format() applied to each element of the double array.
+    """
+    output = []
+    for i in range(len(state)):
+        output.append([])
+        for elt in state[i]:
+            output[i].append(format(elt))
+    return output
 
 """
 assert(mult_for_f256(bitify(int("57", 16)), bitify(int("13", 16))) == bitify(int("fe", 16)))
